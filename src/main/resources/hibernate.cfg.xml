@@ -20,6 +20,9 @@
         <property name="hibernate.format_sql">true</property>
 
         <!-- Entidades mapeadas -->
+        <mapping class="com.gestion.model.Proveedor"/>
+        <mapping class="com.gestion.model.Pieza"/>
+        <mapping class="com.gestion.model.Proyecto"/>
 
     </session-factory>
 </hibernate-configuration>
