@@ -1,6 +1,8 @@
 package com.gestion.model;
 
 import jakarta.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "proyectos")
@@ -15,6 +17,9 @@ public class Proyecto {
 
     @Column(nullable = false, length = 50)
     private String ciudad;
+
+    @OneToMany(mappedBy = "proyecto")
+    private List<Gestion> gestiones = new ArrayList<>();
 
     public Proyecto() {
     }
@@ -33,6 +38,8 @@ public class Proyecto {
 
     public String getCiudad() { return ciudad; }
     public void setCiudad(String ciudad) { this.ciudad = ciudad; }
+
+    public List<Gestion> getGestiones() { return gestiones; }
 
     @Override
     public String toString() {

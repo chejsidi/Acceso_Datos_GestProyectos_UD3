@@ -23,6 +23,7 @@
         <mapping class="com.gestion.model.Proveedor"/>
         <mapping class="com.gestion.model.Pieza"/>
         <mapping class="com.gestion.model.Proyecto"/>
+        <mapping class="com.gestion.model.Gestion"/>
 
     </session-factory>
 </hibernate-configuration>

@@ -1,6 +1,8 @@
 package com.gestion.model;
 
 import jakarta.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "proveedores")
@@ -19,6 +21,9 @@ public class Proveedor {
 
     @Column(nullable = false, length = 150)
     private String direccion;
+
+    @OneToMany(mappedBy = "proveedor")
+    private List<Gestion> gestiones = new ArrayList<>();
 
     // Constructor vacío obligatorio para Hibernate
     public Proveedor() {
@@ -42,6 +47,8 @@ public class Proveedor {
 
     public String getDireccion() { return direccion; }
     public void setDireccion(String direccion) { this.direccion = direccion; }
+
+    public List<Gestion> getGestiones() { return gestiones; }
 
     @Override
     public String toString() {

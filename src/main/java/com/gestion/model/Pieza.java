@@ -2,6 +2,8 @@ package com.gestion.model;
 
 import jakarta.persistence.*;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "piezas")
@@ -20,6 +22,9 @@ public class Pieza {
 
     @Column(length = 255)
     private String descripcion;
+
+    @OneToMany(mappedBy = "pieza")
+    private List<Gestion> gestiones = new ArrayList<>();
 
     public Pieza() {
     }
@@ -42,6 +47,8 @@ public class Pieza {
 
     public String getDescripcion() { return descripcion; }
     public void setDescripcion(String descripcion) { this.descripcion = descripcion; }
+
+    public List<Gestion> getGestiones() { return gestiones; }
 
     @Override
     public String toString() {
