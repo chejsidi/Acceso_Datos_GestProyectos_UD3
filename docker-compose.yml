@@ -1,0 +1,20 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: gestion-proyectos-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: gestion_proyectos
+      MYSQL_USER: gestion
+      MYSQL_PASSWORD: gestion123
+      TZ: Europe/Madrid
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_spanish_ci
+    ports:
+      - "3306:3306"
+    volumes:
+      - datos_mysql:/var/lib/mysql
+      - ./sql:/docker-entrypoint-initdb.d          # ejecuta los scripts de /sql la primera vez
+
+volumes:
+  datos_mysql:
