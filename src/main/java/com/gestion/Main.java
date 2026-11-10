@@ -7,6 +7,17 @@ import com.gestion.util.HibernateUtil;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import com.gestion.repository.PiezaRepository;
+import com.gestion.repository.ProveedorRepository;
+import com.gestion.repository.ProyectoRepository;
+import com.gestion.service.PiezaService;
+import com.gestion.service.ProveedorService;
+import com.gestion.service.ProyectoService;
+import com.gestion.ui.MenuPiezas;
+import com.gestion.ui.MenuPrincipal;
+import com.gestion.ui.MenuProveedores;
+import com.gestion.ui.MenuProyectos;
+import com.gestion.util.HibernateUtil;
 
 public class Main {
 
@@ -25,11 +36,19 @@ public class Main {
         }
 
         try {
-            // Inyección de dependencias manual: se crea cada pieza y se le pasa a la siguiente
             ProveedorService proveedorService = new ProveedorService(new ProveedorRepository());
+            PiezaService piezaService = new PiezaService(new PiezaRepository());
+            ProyectoService proyectoService = new ProyectoService(new ProyectoRepository());
+
+            MenuPrincipal menuPrincipal = new MenuPrincipal(
+                    new MenuProveedores(proveedorService),
+                    new MenuPiezas(piezaService),
+                    new MenuProyectos(proyectoService)
+            );
             new MenuProveedores(proveedorService).mostrar();
         } finally {
             HibernateUtil.cerrar();
         }
+
     }
 }

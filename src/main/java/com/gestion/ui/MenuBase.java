@@ -20,6 +20,11 @@ public abstract class MenuBase {
 
     protected abstract void ejecutarOpcion(int opcion);
 
+    // Los submenús pausan tras cada operación; el menú principal lo desactiva
+    protected boolean pausarDespuesDeOpcion() {
+        return true;
+    }
+
     public void mostrar() {
         while (true) {
             System.out.println("\n========== " + titulo + " ==========");
@@ -42,7 +47,10 @@ public abstract class MenuBase {
             } catch (RuntimeException e) {
                 System.out.println("  ✗ Error inesperado: " + e.getMessage());
             }
-            Consola.pausa();
+
+            if (pausarDespuesDeOpcion()) {
+                Consola.pausa();
+            }
         }
     }
 
