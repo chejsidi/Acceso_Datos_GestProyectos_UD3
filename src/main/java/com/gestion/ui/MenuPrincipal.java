@@ -5,12 +5,15 @@ public class MenuPrincipal extends MenuBase {
     private final MenuProveedores menuProveedores;
     private final MenuPiezas menuPiezas;
     private final MenuProyectos menuProyectos;
+    private final MenuSuministros menuSuministros;
 
-    public MenuPrincipal(MenuProveedores menuProveedores, MenuPiezas menuPiezas, MenuProyectos menuProyectos) {
+    public MenuPrincipal(MenuProveedores menuProveedores, MenuPiezas menuPiezas,
+                         MenuProyectos menuProyectos, MenuSuministros menuSuministros) {
         super("MENÚ PRINCIPAL", "Salir");
         this.menuProveedores = menuProveedores;
         this.menuPiezas = menuPiezas;
         this.menuProyectos = menuProyectos;
+        this.menuSuministros = menuSuministros;
     }
 
     @Override
@@ -19,6 +22,7 @@ public class MenuPrincipal extends MenuBase {
                 "Gestión de proveedores",
                 "Gestión de piezas",
                 "Gestión de proyectos",
+                "Gestión de suministros",
                 "Ayuda"
         };
     }
@@ -29,7 +33,8 @@ public class MenuPrincipal extends MenuBase {
             case 1 -> menuProveedores.mostrar();
             case 2 -> menuPiezas.mostrar();
             case 3 -> menuProyectos.mostrar();
-            case 4 -> Ayuda.mostrar();
+            case 4 -> menuSuministros.mostrar();
+            case 5 -> Ayuda.mostrar();
         }
     }
 

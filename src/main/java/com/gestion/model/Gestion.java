@@ -2,6 +2,7 @@ package com.gestion.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 @Entity
 @Table(name = "gestiones")
@@ -58,9 +59,16 @@ public class Gestion {
     public Proyecto getProyecto() { return proyecto; }
     public void setProyecto(Proyecto proyecto) { this.proyecto = proyecto; }
 
+    // static: Hibernate ignora los atributos estáticos, no se crea columna
+    private static final DateTimeFormatter FORMATO = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
     @Override
     public String toString() {
-        return String.format("#%d | %s | Proveedor: %s | Pieza: %s | Proyecto: %s | Cantidad: %d",
-                id, fecha, proveedor.getNombre(), pieza.getNombre(), proyecto.getNombre(), cantidad);
+        return String.format("#%d | %s | Proveedor: [%s] %s | Pieza: [%s] %s | Proyecto: [%s] %s | Cantidad: %d",
+                id, fecha.format(FORMATO),
+                proveedor.getCodigo(), proveedor.getNombre(),
+                pieza.getCodigo(), pieza.getNombre(),
+                proyecto.getCodigo(), proyecto.getNombre(),
+                cantidad);
     }
 }

@@ -78,6 +78,19 @@ public class Consola {
         }
     }
 
+    public static String leerCodigoOpcional(String mensaje, String valorActual) {
+        while (true) {
+            String codigo = leerLinea(mensaje + " [" + valorActual + "]: ");
+            if (codigo.isEmpty()) {
+                return valorActual;
+            }
+            if (codigo.matches(PATRON_CODIGO)) {
+                return codigo.toUpperCase();
+            }
+            error("Código no válido: solo letras y números, entre 1 y 10 caracteres (ej: PR001).");
+        }
+    }
+
     public static int leerEntero(String mensaje, int minimo, int maximo) {
         while (true) {
             try {

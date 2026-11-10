@@ -19,6 +19,10 @@ import com.gestion.ui.MenuProveedores;
 import com.gestion.ui.MenuProyectos;
 import com.gestion.util.HibernateUtil;
 
+import com.gestion.repository.GestionRepository;
+import com.gestion.service.GestionService;
+import com.gestion.ui.MenuSuministros;
+
 public class Main {
 
     // Silencia los mensajes INFO de Hibernate (temporal, hasta el commit de logging).
@@ -36,14 +40,18 @@ public class Main {
         }
 
         try {
+            // Construcción de dependencias: repository → service → menú
             ProveedorService proveedorService = new ProveedorService(new ProveedorRepository());
             PiezaService piezaService = new PiezaService(new PiezaRepository());
             ProyectoService proyectoService = new ProyectoService(new ProyectoRepository());
+            GestionService gestionService = new GestionService(
+                    new GestionRepository(), proveedorService, piezaService, proyectoService);
 
             MenuPrincipal menuPrincipal = new MenuPrincipal(
                     new MenuProveedores(proveedorService),
                     new MenuPiezas(piezaService),
-                    new MenuProyectos(proyectoService)
+                    new MenuProyectos(proyectoService),
+                    new MenuSuministros(gestionService)
             );
             new MenuProveedores(proveedorService).mostrar();
         } finally {
