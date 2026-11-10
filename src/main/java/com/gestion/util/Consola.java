@@ -26,6 +26,7 @@ public class Consola {
     // Punto único de lectura: si se cierra la entrada salir de forma controlada
     private static String leerLinea(String mensaje) {
         System.out.print(mensaje);
+        System.out.flush();  // fuerza a mostrar el mensaje antes de esperar la respuesta
         try {
             return scanner.nextLine().trim();
         } catch (NoSuchElementException | IllegalStateException e) {
@@ -93,14 +94,19 @@ public class Consola {
 
     public static int leerEntero(String mensaje, int minimo, int maximo) {
         while (true) {
+            String texto = leerLinea(mensaje);
+            if (texto.isEmpty()) {
+                error("No has escrito nada. Introduce un número entre " + minimo + " y " + maximo + ".");
+                continue;
+            }
             try {
-                int numero = Integer.parseInt(leerLinea(mensaje));
+                int numero = Integer.parseInt(texto);
                 if (numero >= minimo && numero <= maximo) {
                     return numero;
                 }
                 error("Debe estar entre " + minimo + " y " + maximo + ".");
             } catch (NumberFormatException e) {
-                error("Debes introducir un número entero.");
+                error("'" + texto + "' no es un número entero.");
             }
         }
     }
