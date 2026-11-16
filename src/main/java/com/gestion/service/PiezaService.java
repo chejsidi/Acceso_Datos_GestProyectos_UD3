@@ -5,6 +5,8 @@ import com.gestion.exception.IntegridadException;
 import com.gestion.exception.ValidacionException;
 import com.gestion.model.Pieza;
 import com.gestion.repository.PiezaRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -12,6 +14,7 @@ import java.util.List;
 public class PiezaService {
 
     private final PiezaRepository repository;
+    private static final Logger log = LoggerFactory.getLogger(PiezaService.class);
 
     public PiezaService(PiezaRepository repository) {
         this.repository = repository;
@@ -23,6 +26,7 @@ public class PiezaService {
             throw new ValidacionException("Ya existe una pieza con el código " + pieza.getCodigo() + ".");
         }
         repository.guardar(pieza);
+        log.info("Alta de pieza {}", pieza.getCodigo());
     }
 
     public void baja(String codigo) {
@@ -33,12 +37,14 @@ public class PiezaService {
                     + suministros + " suministro(s).");
         }
         repository.eliminarPorId(codigo);
+        log.info("Baja de pieza {}", codigo);
     }
 
     public void modificar(Pieza pieza) {
         validar(pieza);
         buscarPorCodigo(pieza.getCodigo());
         repository.actualizar(pieza);
+        log.info("Modificación de pieza {}", pieza.getCodigo());
     }
 
     public Pieza buscarPorCodigo(String codigo) {
@@ -65,5 +71,17 @@ public class PiezaService {
         if (p.getPrecio() == null || p.getPrecio().compareTo(BigDecimal.ZERO) < 0) {
             throw new ValidacionException("El precio es obligatorio y no puede ser negativo.");
         }
+    }
+
+    public List<Pieza> busquedaAvanzada(String nombre, BigDecimal precioMinimo, BigDecimal precioMaximo,
+                                        String codigoProveedor, String codigoProyecto) {
+        if (precioMinimo != null && precioMaximo != null && precioMinimo.compareTo(precioMaximo) > 0) {
+            throw new ValidacionException("El precio mínimo no puede ser mayor que el máximo.");
+        }
+        return repository.busquedaAvanzada(nombre, precioMinimo, precioMaximo, codigoProveedor, codigoProyecto);
+    }
+
+    public long contar() {
+        return repository.contar();
     }
 }

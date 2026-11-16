@@ -5,6 +5,8 @@ import com.gestion.exception.IntegridadException;
 import com.gestion.exception.ValidacionException;
 import com.gestion.model.Proveedor;
 import com.gestion.repository.ProveedorRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -12,6 +14,7 @@ import java.util.List;
 public class ProveedorService {
 
     private final ProveedorRepository repository;
+    private static final Logger log = LoggerFactory.getLogger(ProveedorService.class);
 
     // El repositorio se recibe desde fuera (inyección de dependencias manual, como en Angular)
     public ProveedorService(ProveedorRepository repository) {
@@ -24,6 +27,7 @@ public class ProveedorService {
             throw new ValidacionException("Ya existe un proveedor con el código " + proveedor.getCodigo() + ".");
         }
         repository.guardar(proveedor);
+        log.info("Alta de proveedor {}", proveedor.getCodigo());
     }
 
     public void baja(String codigo) {
@@ -34,12 +38,14 @@ public class ProveedorService {
                     + suministros + " suministro(s) asociado(s).");
         }
         repository.eliminarPorId(codigo);
+        log.info("Baja de proveedor {}", codigo);
     }
 
     public void modificar(Proveedor proveedor) {
         validar(proveedor);
         buscarPorCodigo(proveedor.getCodigo());
         repository.actualizar(proveedor);
+        log.info("Modificación de proveedor {}", proveedor.getCodigo());
     }
 
     public Proveedor buscarPorCodigo(String codigo) {
@@ -74,5 +80,13 @@ public class ProveedorService {
 
     private boolean estaVacio(String texto) {
         return texto == null || texto.isBlank();
+    }
+
+    public List<Proveedor> busquedaAvanzada(String nombre, String apellidos, String direccion, String codigoPieza) {
+        return repository.busquedaAvanzada(nombre, apellidos, direccion, codigoPieza);
+    }
+
+    public long contar() {
+        return repository.contar();
     }
 }

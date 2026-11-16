@@ -1,12 +1,26 @@
 <configuration>
-    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+
+    <property name="PATRON" value="%d{yyyy-MM-dd HH:mm:ss} [%-5level] %logger{30} - %msg%n"/>
+
+    <!-- Escribe en logs/aplicacion.log y crea un fichero nuevo cada día (guarda 30 días) -->
+    <appender name="FICHERO" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/aplicacion.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logs/aplicacion.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
         <encoder>
-            <pattern>%d{HH:mm:ss} [%-5level] %logger{36} - %msg%n</pattern>
+            <pattern>${PATRON}</pattern>
+            <charset>UTF-8</charset>
         </encoder>
     </appender>
-    <root level="INFO">
-        <appender-ref ref="CONSOLE"/>
-    </root>
+
+    <!-- De Hibernate solo avisos y errores; de nuestra app también la información -->
     <logger name="org.hibernate" level="WARN"/>
     <logger name="com.gestion" level="INFO"/>
+
+    <root level="WARN">
+        <appender-ref ref="FICHERO"/>
+    </root>
+
 </configuration>

@@ -5,12 +5,15 @@ import com.gestion.exception.IntegridadException;
 import com.gestion.exception.ValidacionException;
 import com.gestion.model.Proyecto;
 import com.gestion.repository.ProyectoRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
 public class ProyectoService {
 
     private final ProyectoRepository repository;
+    private static final Logger log = LoggerFactory.getLogger(ProyectoService.class);
 
     public ProyectoService(ProyectoRepository repository) {
         this.repository = repository;
@@ -22,6 +25,7 @@ public class ProyectoService {
             throw new ValidacionException("Ya existe un proyecto con el código " + proyecto.getCodigo() + ".");
         }
         repository.guardar(proyecto);
+        log.info("Alta de proyecto {}", proyecto.getCodigo());
     }
 
     public void baja(String codigo) {
@@ -32,12 +36,14 @@ public class ProyectoService {
                     + suministros + " suministro(s) asociado(s).");
         }
         repository.eliminarPorId(codigo);
+        log.info("Baja de proyecto {}", codigo);
     }
 
     public void modificar(Proyecto proyecto) {
         validar(proyecto);
         buscarPorCodigo(proyecto.getCodigo());
         repository.actualizar(proyecto);
+        log.info("Modificación de proyecto {}", proyecto.getCodigo());
     }
 
     public Proyecto buscarPorCodigo(String codigo) {
@@ -66,5 +72,13 @@ public class ProyectoService {
         if (p.getCodigo() == null || p.getCodigo().isBlank()) throw new ValidacionException("El código es obligatorio.");
         if (p.getNombre() == null || p.getNombre().isBlank()) throw new ValidacionException("El nombre es obligatorio.");
         if (p.getCiudad() == null || p.getCiudad().isBlank()) throw new ValidacionException("La ciudad es obligatoria.");
+    }
+
+    public List<Proyecto> busquedaAvanzada(String nombre, String ciudad, String codigoProveedor, String codigoPieza) {
+        return repository.busquedaAvanzada(nombre, ciudad, codigoProveedor, codigoPieza);
+    }
+
+    public long contar() {
+        return repository.contar();
     }
 }

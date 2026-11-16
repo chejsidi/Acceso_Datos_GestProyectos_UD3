@@ -1,102 +1,66 @@
 package com.gestion.service;
 
+import com.gestion.dto.AnalisisProyecto;
+import com.gestion.dto.ConsumoPieza;
+import com.gestion.dto.Estadisticas;
+import com.gestion.exception.ValidacionException;
 import com.gestion.model.Gestion;
-import com.gestion.model.Pieza;
-import com.gestion.model.Proveedor;
 import com.gestion.model.Proyecto;
 import com.gestion.repository.GestionRepository;
 
 import java.math.BigDecimal;
-import java.util.Comparator;
+import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 public class InformeService {
+
+    private static final int TOP = 5;
 
     private final GestionRepository gestionRepository;
     private final ProveedorService proveedorService;
     private final PiezaService piezaService;
     private final ProyectoService proyectoService;
 
-    public InformeService(GestionRepository gestionRepository,
-                          ProveedorService proveedorService,
-                          PiezaService piezaService,
-                          ProyectoService proyectoService) {
+    public InformeService(GestionRepository gestionRepository, ProveedorService proveedorService,
+                          PiezaService piezaService, ProyectoService proyectoService) {
         this.gestionRepository = gestionRepository;
         this.proveedorService = proveedorService;
         this.piezaService = piezaService;
         this.proyectoService = proyectoService;
     }
 
-    // Total de suministros por proveedor (código → cantidad de registros)
-    public Map<String, Long> suministrosPorProveedor() {
-        return gestionRepository.listarTodos().stream()
-                .collect(Collectors.groupingBy(
-                        g -> g.getProveedor().getCodigo(),
-                        Collectors.counting()
-                ));
+    public List<Gestion> historicoProveedor(String codigo, LocalDate desde, LocalDate hasta) {
+        proveedorService.buscarPorCodigo(codigo);
+        if (desde.isAfter(hasta)) {
+            throw new ValidacionException("La fecha inicial no puede ser posterior a la final.");
+        }
+        return gestionRepository.historicoProveedor(codigo, desde, hasta);
     }
 
-    // Total de suministros por pieza
-    public Map<String, Long> suministrosPorPieza() {
-        return gestionRepository.listarTodos().stream()
-                .collect(Collectors.groupingBy(
-                        g -> g.getPieza().getCodigo(),
-                        Collectors.counting()
-                ));
+    public AnalisisProyecto analizarProyecto(String codigo) {
+        Proyecto proyecto = proyectoService.buscarPorCodigo(codigo);
+        List<ConsumoPieza> piezas = gestionRepository.consumoPiezasDeProyecto(codigo);
+        // Suma de los costes de cada pieza
+        BigDecimal costeTotal = piezas.stream()
+                .map(ConsumoPieza::coste)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        return new AnalisisProyecto(proyecto, gestionRepository.contarProveedoresDeProyecto(codigo), piezas, costeTotal);
     }
 
-    // Total de suministros por proyecto
-    public Map<String, Long> suministrosPorProyecto() {
-        return gestionRepository.listarTodos().stream()
-                .collect(Collectors.groupingBy(
-                        g -> g.getProyecto().getCodigo(),
-                        Collectors.counting()
-                ));
+    public Estadisticas estadisticasGlobales() {
+        return new Estadisticas(
+                proveedorService.contar(),
+                piezaService.contar(),
+                proyectoService.contar(),
+                gestionRepository.contar(),
+                gestionRepository.totalUnidades(),
+                gestionRepository.costeTotal(),
+                gestionRepository.proveedoresMasActivos(TOP),
+                gestionRepository.piezasMasUtilizadas(TOP),
+                gestionRepository.proyectosConMasSuministros(TOP));
     }
 
-    // Coste total por proyecto (suma de precio * cantidad de cada suministro)
-    public Map<String, BigDecimal> costeTotalPorProyecto() {
-        return gestionRepository.listarTodos().stream()
-                .collect(Collectors.groupingBy(
-                        g -> g.getProyecto().getCodigo(),
-                        Collectors.reducing(
-                                BigDecimal.ZERO,
-                                g -> g.getPieza().getPrecio()
-                                        .multiply(BigDecimal.valueOf(g.getCantidad())),
-                                BigDecimal::add
-                        )
-                ));
-    }
-
-    // Piezas ordenadas por precio descendente
-    public List<Pieza> piezasPorPrecioDesc() {
-        return piezaService.listarTodas().stream()
-                .sorted(Comparator.comparing(Pieza::getPrecio).reversed())
-                .toList();
-    }
-
-    // Proveedor con más suministros
-    public Proveedor proveedorMasActivo() {
-        return suministrosPorProveedor().entrySet().stream()
-                .max(Map.Entry.comparingByValue())
-                .map(e -> proveedorService.buscarPorCodigo(e.getKey()))
-                .orElseThrow(() -> new IllegalStateException("No hay suministros registrados."));
-    }
-
-    // Proyecto con mayor coste acumulado
-    public Proyecto proyectoMasCostoso() {
-        return costeTotalPorProyecto().entrySet().stream()
-                .max(Map.Entry.comparingByValue())
-                .map(e -> proyectoService.buscarPorCodigo(e.getKey()))
-                .orElseThrow(() -> new IllegalStateException("No hay suministros registrados."));
-    }
-
-    // Todos los suministros ordenados por fecha descendente
-    public List<Gestion> suministrosOrdenadosPorFecha() {
-        return gestionRepository.listarTodos().stream()
-                .sorted(Comparator.comparing(Gestion::getFecha).reversed())
-                .toList();
+    public List<Gestion> todosLosSuministros() {
+        return gestionRepository.listarTodos();
     }
 }

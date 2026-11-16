@@ -7,6 +7,8 @@ import com.gestion.model.Pieza;
 import com.gestion.model.Proveedor;
 import com.gestion.model.Proyecto;
 import com.gestion.repository.GestionRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -17,6 +19,7 @@ public class GestionService {
     private final ProveedorService proveedorService;
     private final PiezaService piezaService;
     private final ProyectoService proyectoService;
+    private static final Logger log = LoggerFactory.getLogger(GestionService.class);
 
     // Un servicio puede depender de otros servicios (como en Angular)
     public GestionService(GestionRepository repository, ProveedorService proveedorService,
@@ -30,17 +33,20 @@ public class GestionService {
     public void alta(Gestion gestion) {
         validar(gestion);
         repository.guardar(gestion);
+        log.info("Alta de suministro {}", gestion.getId());
     }
 
     public void baja(Long id) {
         buscarPorId(id);
         repository.eliminarPorId(id);
+        log.info("Baja de suministro {}", id);
     }
 
     public void modificar(Gestion gestion) {
         validar(gestion);
         buscarPorId(gestion.getId());
         repository.actualizar(gestion);
+        log.info("Modificación de suministro {}", gestion.getId());
     }
 
     public Gestion buscarPorId(Long id) {

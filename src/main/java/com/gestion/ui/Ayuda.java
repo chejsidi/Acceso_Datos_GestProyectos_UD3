@@ -18,6 +18,9 @@ public class Ayuda {
                   Proyectos    -> Altas, bajas, modificaciones y búsquedas.
                   Suministros  -> Registra qué proveedor suministra qué pieza
                                   a qué proyecto, en qué fecha y cantidad.
+                  Búsquedas    -> Combina varios filtros (Enter = sin filtro).
+                                    Informes     -> Histórico, análisis de proyecto, estadísticas
+                                                    y exportación a CSV (Excel) o XML.
 
                 NAVEGACIÓN
                   Escribe el número de la opción y pulsa Enter.

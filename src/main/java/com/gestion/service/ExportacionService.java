@@ -1,106 +1,111 @@
 package com.gestion.service;
 
-import com.gestion.model.Gestion;
-import com.gestion.model.Pieza;
-import com.gestion.model.Proveedor;
-import com.gestion.model.Proyecto;
+import com.gestion.dto.Tabla;
+import com.gestion.exception.GestionException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.text.Normalizer;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.stream.Collectors;
 
+// Exporta cualquier Tabla a CSV o XML usando solo clases de Java
 public class ExportacionService {
 
-    private static final DateTimeFormatter FORMATO_ARCHIVO =
-            DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
+    private static final Logger log = LoggerFactory.getLogger(ExportacionService.class);
+    private static final Path CARPETA = Path.of("exportaciones");
+    private static final DateTimeFormatter MARCA_TIEMPO = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
 
-    // Genera el nombre del archivo con timestamp para no sobreescribir
-    private Path rutaArchivo(String prefijo, String extension) {
-        String nombre = prefijo + "_" + LocalDateTime.now().format(FORMATO_ARCHIVO) + extension;
-        return Paths.get(System.getProperty("user.home"), nombre);
-    }
+    public Path exportarCSV(Tabla tabla) {
+        Path fichero = rutaFichero(tabla.titulo(), "csv");
+        // \uFEFF (BOM) hace que Excel reconozca el UTF-8 y muestre bien las tildes
+        StringBuilder contenido = new StringBuilder("\uFEFF");
+        contenido.append(lineaCSV(tabla.columnas()));
+        tabla.filas().forEach(fila -> contenido.append(lineaCSV(fila)));
 
-    public Path exportarProveedoresCsv(List<Proveedor> proveedores) {
-        Path ruta = rutaArchivo("proveedores", ".csv");
-        try (PrintWriter pw = new PrintWriter(Files.newBufferedWriter(ruta, StandardCharsets.UTF_8))) {
-            pw.println("codigo,nombre,apellidos,direccion");
-            for (Proveedor p : proveedores) {
-                pw.printf("%s,%s,%s,%s%n",
-                        escaparCsv(p.getCodigo()),
-                        escaparCsv(p.getNombre()),
-                        escaparCsv(p.getApellidos()),
-                        escaparCsv(p.getDireccion()));
-            }
+        try {
+            Files.writeString(fichero, contenido.toString(), StandardCharsets.UTF_8);
         } catch (IOException e) {
-            throw new RuntimeException("Error al exportar proveedores: " + e.getMessage(), e);
+            throw new GestionException("No se pudo crear el fichero CSV.", e);
         }
-        return ruta;
+        log.info("Exportado CSV: {}", fichero);
+        return fichero;
     }
 
-    public Path exportarPiezasCsv(List<Pieza> piezas) {
-        Path ruta = rutaArchivo("piezas", ".csv");
-        try (PrintWriter pw = new PrintWriter(Files.newBufferedWriter(ruta, StandardCharsets.UTF_8))) {
-            pw.println("codigo,nombre,precio,descripcion");
-            for (Pieza p : piezas) {
-                pw.printf("%s,%s,%s,%s%n",
-                        escaparCsv(p.getCodigo()),
-                        escaparCsv(p.getNombre()),
-                        p.getPrecio().toPlainString(),
-                        escaparCsv(p.getDescripcion()));
+    public Path exportarXML(Tabla tabla) {
+        Path fichero = rutaFichero(tabla.titulo(), "xml");
+        try {
+            Document documento = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+            Element raiz = documento.createElement("informe");
+            raiz.setAttribute("titulo", tabla.titulo());
+            raiz.setAttribute("generado", LocalDateTime.now().withNano(0).toString());
+            documento.appendChild(raiz);
+
+            List<String> etiquetas = tabla.columnas().stream().map(this::nombreValido).toList();
+            for (List<String> fila : tabla.filas()) {
+                Element registro = documento.createElement("registro");
+                for (int i = 0; i < etiquetas.size(); i++) {
+                    Element campo = documento.createElement(etiquetas.get(i));
+                    campo.setTextContent(fila.get(i));
+                    registro.appendChild(campo);
+                }
+                raiz.appendChild(registro);
             }
-        } catch (IOException e) {
-            throw new RuntimeException("Error al exportar piezas: " + e.getMessage(), e);
+
+            Transformer transformer = TransformerFactory.newInstance().newTransformer();
+            transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+            transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+            transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
+            transformer.transform(new DOMSource(documento), new StreamResult(fichero.toFile()));
+        } catch (ParserConfigurationException | TransformerException e) {
+            throw new GestionException("No se pudo crear el fichero XML.", e);
         }
-        return ruta;
+        log.info("Exportado XML: {}", fichero);
+        return fichero;
     }
 
-    public Path exportarProyectosCsv(List<Proyecto> proyectos) {
-        Path ruta = rutaArchivo("proyectos", ".csv");
-        try (PrintWriter pw = new PrintWriter(Files.newBufferedWriter(ruta, StandardCharsets.UTF_8))) {
-            pw.println("codigo,nombre,ciudad");
-            for (Proyecto p : proyectos) {
-                pw.printf("%s,%s,%s%n",
-                        escaparCsv(p.getCodigo()),
-                        escaparCsv(p.getNombre()),
-                        escaparCsv(p.getCiudad()));
-            }
-        } catch (IOException e) {
-            throw new RuntimeException("Error al exportar proyectos: " + e.getMessage(), e);
-        }
-        return ruta;
+    private String lineaCSV(List<String> valores) {
+        return valores.stream().map(this::escaparCSV).collect(Collectors.joining(";")) + System.lineSeparator();
     }
 
-    public Path exportarSuministrosCsv(List<Gestion> suministros) {
-        Path ruta = rutaArchivo("suministros", ".csv");
-        try (PrintWriter pw = new PrintWriter(Files.newBufferedWriter(ruta, StandardCharsets.UTF_8))) {
-            pw.println("id,proveedor,pieza,proyecto,cantidad,fecha");
-            for (Gestion g : suministros) {
-                pw.printf("%d,%s,%s,%s,%d,%s%n",
-                        g.getId(),
-                        escaparCsv(g.getProveedor().getCodigo()),
-                        escaparCsv(g.getPieza().getCodigo()),
-                        escaparCsv(g.getProyecto().getCodigo()),
-                        g.getCantidad(),
-                        g.getFecha().toString());
-            }
-        } catch (IOException e) {
-            throw new RuntimeException("Error al exportar suministros: " + e.getMessage(), e);
-        }
-        return ruta;
-    }
-
-    // Envuelve en comillas si el valor contiene comas o comillas
-    private String escaparCsv(String valor) {
-        if (valor == null) return "";
-        if (valor.contains(",") || valor.contains("\"") || valor.contains("\n")) {
+    private String escaparCSV(String valor) {
+        if (valor.contains(";") || valor.contains("\"") || valor.contains("\n")) {
             return "\"" + valor.replace("\"", "\"\"") + "\"";
         }
         return valor;
+    }
+
+    private String nombreValido(String texto) {
+        String limpio = Normalizer.normalize(texto, Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "")
+                .toLowerCase()
+                .replaceAll("[^a-z0-9]+", "_")
+                .replaceAll("^_|_$", "");
+        return limpio.isEmpty() || Character.isDigit(limpio.charAt(0)) ? "campo_" + limpio : limpio;
+    }
+
+    private Path rutaFichero(String titulo, String extension) {
+        try {
+            Files.createDirectories(CARPETA);
+        } catch (IOException e) {
+            throw new GestionException("No se pudo crear la carpeta de exportaciones.", e);
+        }
+        return CARPETA.resolve(nombreValido(titulo) + "_" + LocalDateTime.now().format(MARCA_TIEMPO) + "." + extension);
     }
 }

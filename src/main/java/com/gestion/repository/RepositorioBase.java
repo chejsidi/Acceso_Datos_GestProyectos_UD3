@@ -7,7 +7,8 @@ import com.gestion.util.HibernateUtil;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.exception.ConstraintViolationException;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -20,6 +21,7 @@ import com.gestion.util.SesionActual;
 public abstract class RepositorioBase<T, ID> {
 
     protected final Class<T> clase;
+    private static final Logger log = LoggerFactory.getLogger(RepositorioBase.class);
 
     protected RepositorioBase(Class<T> clase) {
         this.clase = clase;
@@ -71,10 +73,19 @@ public abstract class RepositorioBase<T, ID> {
         return buscarPorId(id).isPresent();
     }
 
-    // JPQL: se consulta sobre el nombre de la clase (Proveedor), no de la tabla (proveedores)
     public List<T> listarTodos() {
         return consultar(session ->
                 session.createQuery("FROM " + clase.getSimpleName(), clase).getResultList());
+    }
+
+    public long contar() {
+        return consultar(session -> session.createQuery(
+                 "SELECT COUNT(e) FROM " + clase.getSimpleName() + " e", Long.class).getSingleResult());
+    }
+
+    // Prepara el texto para un LIKE sin distinguir mayúsculas; null = sin filtro
+    protected static String patronLike(String texto) {
+        return texto == null ? null : "%" + texto.toLowerCase() + "%";
     }
 
     // Para lecturas: abre sesión, ejecuta la consulta y la cierra
@@ -108,16 +119,18 @@ public abstract class RepositorioBase<T, ID> {
         }
     }
 
-    // Convierte los errores técnicos de Hibernate en excepciones con mensaje para el usuario
+    // Convierte los errores técnicos de Hibernate en excepciones con mensaje para el usuario.
     private GestionException traducirError(RuntimeException e) {
         Throwable causa = e;
         while (causa != null) {
             if (causa instanceof ConstraintViolationException) {
+                log.warn("Violación de integridad en {}: {}", clase.getSimpleName(), causa.getMessage());
                 return new IntegridadException(
                         "La operación no es posible: rompería la integridad de los datos (registro duplicado o en uso).");
             }
             causa = causa.getCause();
         }
+        log.error("Error de base de datos en {}", clase.getSimpleName(), e);
         return new GestionException("Error al acceder a la base de datos. Comprueba que MySQL está arrancado.", e);
     }
 }

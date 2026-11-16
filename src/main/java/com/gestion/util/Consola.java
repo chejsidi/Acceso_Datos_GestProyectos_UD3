@@ -234,4 +234,32 @@ public class Consola {
             error("Las contraseñas no coinciden.");
         }
     }
+
+    // Filtros de búsqueda: Enter = sin filtro (devuelve null)
+    public static String leerFiltroTexto(String mensaje, int longitudMaxima) {
+        while (true) {
+            String texto = leerLinea(mensaje);
+            if (texto.isEmpty()) return null;
+            if (texto.length() <= longitudMaxima) return texto;
+            error("Máximo " + longitudMaxima + " caracteres.");
+        }
+    }
+
+    public static String leerFiltroCodigo(String mensaje) {
+        while (true) {
+            String codigo = leerLinea(mensaje);
+            if (codigo.isEmpty()) return null;
+            if (codigo.matches(PATRON_CODIGO)) return codigo.toUpperCase();
+            error("Código no válido: solo letras y números, entre 1 y 10 caracteres (ej: PR001).");
+        }
+    }
+
+    public static BigDecimal leerFiltroPrecio(String mensaje) {
+        while (true) {
+            String texto = leerLinea(mensaje);
+            if (texto.isEmpty()) return null;
+            BigDecimal precio = convertirPrecio(texto);
+            if (precio != null) return precio;
+        }
+    }
 }

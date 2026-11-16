@@ -34,4 +34,20 @@ public class ProveedorRepository extends RepositorioBase<Proveedor, String> {
                 .setParameter("codigo", codigo)
                 .getSingleResult());
     }
+
+    public List<Proveedor> busquedaAvanzada(String nombre, String apellidos, String direccion, String codigoPieza) {
+        return consultar(session -> session.createQuery("""
+                        SELECT p FROM Proveedor p
+                        WHERE (:nombre IS NULL OR LOWER(p.nombre) LIKE :nombre)
+                          AND (:apellidos IS NULL OR LOWER(p.apellidos) LIKE :apellidos)
+                          AND (:direccion IS NULL OR LOWER(p.direccion) LIKE :direccion)
+                          AND (:pieza IS NULL OR EXISTS (
+                                SELECT g FROM Gestion g WHERE g.proveedor = p AND g.pieza.codigo = :pieza))
+                        ORDER BY p.nombre""", Proveedor.class)
+                .setParameter("nombre", patronLike(nombre))
+                .setParameter("apellidos", patronLike(apellidos))
+                .setParameter("direccion", patronLike(direccion))
+                .setParameter("pieza", codigoPieza)
+                .getResultList());
+    }
 }

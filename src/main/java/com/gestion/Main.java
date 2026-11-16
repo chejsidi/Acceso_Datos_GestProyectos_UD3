@@ -16,8 +16,9 @@ public class Main {
         log.info("Aplicación iniciada");
 
         System.out.println("""
-        GESTIÓN DE PROYECTOS - UD3
-        """);
+                ╔══════════════════════════════════════╗
+                ║      GESTIÓN DE PROYECTOS - UD3      ║
+                ╚══════════════════════════════════════╝""");
         System.out.println("Conectando con la base de datos...");
 
         try {
@@ -50,15 +51,13 @@ public class Main {
             AuditoriaService auditoriaService = new AuditoriaService(
                     accesoRepository, new RegistroOperacionRepository());
 
-
             MenuPrincipal menuPrincipal = new MenuPrincipal(
                     new MenuProveedores(proveedorService),
                     new MenuPiezas(piezaService),
                     new MenuProyectos(proyectoService),
                     new MenuSuministros(gestionService),
-                    new MenuBusquedas(proveedorService, piezaService, proyectoService, gestionService), // ← añadido gestionService
-                    new MenuInformes(informeService, exportacionService,
-                            proveedorService, piezaService, proyectoService, gestionService), // ← añadidos los 4 servicios extra
+                    new MenuBusquedas(proveedorService, piezaService, proyectoService),
+                    new MenuInformes(informeService, exportacionService),
                     new MenuSeguridad(authService, auditoriaService)
             );
 
