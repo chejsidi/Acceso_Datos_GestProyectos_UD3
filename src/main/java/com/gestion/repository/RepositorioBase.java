@@ -13,6 +13,9 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import com.gestion.model.RegistroOperacion;
+import com.gestion.util.SesionActual;
+
 // Operaciones CRUD comunes a todas las entidades. T = entidad, ID = tipo de su clave primaria
 public abstract class RepositorioBase<T, ID> {
 
@@ -23,14 +26,19 @@ public abstract class RepositorioBase<T, ID> {
     }
 
     public void guardar(T entidad) {
-        ejecutarEnTransaccion(session -> session.persist(entidad));
+        ejecutarEnTransaccion(session -> {
+            session.persist(entidad);
+            auditar(session, "ALTA", session.getIdentifier(entidad), entidad);
+        });
     }
 
     public void actualizar(T entidad) {
-        ejecutarEnTransaccion(session -> session.merge(entidad));
+        ejecutarEnTransaccion(session -> {
+            T actualizada = session.merge(entidad);
+            auditar(session, "MODIFICACION", session.getIdentifier(actualizada), actualizada);
+        });
     }
 
-    // Buscamos y borramos en la misma sesión: remove() solo funciona con entidades gestionadas
     public void eliminarPorId(ID id) {
         ejecutarEnTransaccion(session -> {
             T entidad = session.find(clase, id);
@@ -38,7 +46,21 @@ public abstract class RepositorioBase<T, ID> {
                 throw new EntidadNoEncontradaException("No existe ningún registro con código " + id + ".");
             }
             session.remove(entidad);
+            auditar(session, "BAJA", id, entidad);
         });
+    }
+
+    // Los repositorios de los propios registros lo desactivan para no auditarse a sí mismos
+    protected boolean auditable() {
+        return true;
+    }
+
+    // Misma sesión y transacción que la operación: si la operación falla, tampoco queda registrada
+    private void auditar(Session session, String operacion, Object id, T entidad) {
+        if (auditable()) {
+            session.persist(new RegistroOperacion(SesionActual.nombreUsuario(), operacion,
+                    clase.getSimpleName(), String.valueOf(id), entidad.toString()));
+        }
     }
 
     public Optional<T> buscarPorId(ID id) {

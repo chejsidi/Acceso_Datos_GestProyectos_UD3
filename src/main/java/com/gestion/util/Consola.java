@@ -7,6 +7,7 @@ import java.time.format.DateTimeParseException;
 import java.time.format.ResolverStyle;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
+import java.util.Arrays;
 
 // Lectura de datos por teclado con validación: repite la pregunta hasta que el dato sea correcto
 public class Consola {
@@ -91,6 +92,7 @@ public class Consola {
             error("Código no válido: solo letras y números, entre 1 y 10 caracteres (ej: PR001).");
         }
     }
+
 
     public static int leerEntero(String mensaje, int minimo, int maximo) {
         while (true) {
@@ -211,5 +213,25 @@ public class Consola {
 
     public static void pausa() {
         leerLinea("\nPulsa Enter para continuar...");
+    }
+
+
+    // Las contraseñas se manejan como char[] para poder borrarlas de memoria tras usarlas
+    public static char[] leerPassword(String mensaje) {
+        return leerLinea(mensaje).toCharArray();
+    }
+
+    public static char[] leerNuevaPassword() {
+        while (true) {
+            char[] password = leerPassword("Nueva contraseña (mín. 8 caracteres, letras y números): ");
+            char[] repetida = leerPassword("Repite la contraseña: ");
+            boolean coinciden = Arrays.equals(password, repetida);
+            Arrays.fill(repetida, ' ');
+            if (coinciden) {
+                return password;
+            }
+            Arrays.fill(password, ' ');
+            error("Las contraseñas no coinciden.");
+        }
     }
 }

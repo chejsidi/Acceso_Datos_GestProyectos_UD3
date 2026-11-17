@@ -24,6 +24,9 @@
         <mapping class="com.gestion.model.Pieza"/>
         <mapping class="com.gestion.model.Proyecto"/>
         <mapping class="com.gestion.model.Gestion"/>
+        <mapping class="com.gestion.model.Usuario"/>
+        <mapping class="com.gestion.model.RegistroAcceso"/>
+        <mapping class="com.gestion.model.RegistroOperacion"/>
 
     </session-factory>
 </hibernate-configuration>
