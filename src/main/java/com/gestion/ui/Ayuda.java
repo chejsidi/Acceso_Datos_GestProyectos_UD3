@@ -19,8 +19,10 @@ public class Ayuda {
                   Suministros  -> Registra qué proveedor suministra qué pieza
                                   a qué proyecto, en qué fecha y cantidad.
                   Búsquedas    -> Combina varios filtros (Enter = sin filtro).
-                                    Informes     -> Histórico, análisis de proyecto, estadísticas
-                                                    y exportación a CSV (Excel) o XML.
+                  Informes     -> Histórico, análisis de proyecto, estadísticas
+                                  y exportación a CSV (Excel) o XML.
+                  Seguridad    -> Registro de accesos y de operaciones,
+                                  crear usuarios y cambiar la contraseña.
 
                 NAVEGACIÓN
                   Escribe el número de la opción y pulsa Enter.
